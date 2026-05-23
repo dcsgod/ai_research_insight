@@ -1,0 +1,1663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>The Bloomberg Terminal for AI Research Trends</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Syne:wght@400;700;800&family=JetBrains+Mono:wght@400;500&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --ink: #0a0a0f;
+    --paper: #f4f1eb;
+    --accent: #ff3c00;
+    --accent2: #0057ff;
+    --muted: #6b6660;
+    --border: rgba(0,0,0,0.12);
+    --mono: 'JetBrains Mono', monospace;
+    --sans: 'Syne', sans-serif;
+    --serif: 'Instrument Serif', serif;
+  }
+
+  html { scroll-behavior: smooth; }
+
+  body {
+    background: var(--paper);
+    color: var(--ink);
+    font-family: var(--sans);
+    overflow-x: hidden;
+    line-height: 1.6;
+  }
+
+  /* ── NAV ── */
+  nav {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(244,241,235,0.92);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid var(--border);
+    padding: 14px 2rem;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .nav-brand {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 1rem;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    text-decoration: none;
+  }
+
+  .nav-brand span { color: var(--accent); }
+
+  .nav-links {
+    display: flex;
+    gap: 1.5rem;
+    list-style: none;
+  }
+
+  .nav-links a {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    text-decoration: none;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    transition: color 0.2s;
+  }
+
+  .nav-links a:hover { color: var(--accent); }
+
+  .live-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #00b96b;
+    background: rgba(0,185,107,0.1);
+    padding: 4px 10px;
+    border-radius: 3px;
+    border: 1px solid rgba(0,185,107,0.25);
+  }
+
+  .live-dot {
+    width: 6px; height: 6px; background: #00b96b; border-radius: 50%;
+    animation: pulse 1.5s ease-in-out infinite;
+  }
+
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
+
+  /* ── HERO ── */
+  .hero {
+    position: relative;
+    padding: 4rem 2rem 3rem;
+    border-bottom: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  .hero-grid-bg {
+    position: absolute;
+    inset: 0;
+    opacity: 0.05;
+    background-image:
+      linear-gradient(var(--ink) 1px, transparent 1px),
+      linear-gradient(90deg, var(--ink) 1px, transparent 1px);
+    background-size: 40px 40px;
+  }
+
+  .hero-content { position: relative; z-index: 2; max-width: 780px; margin: 0 auto; }
+
+  .eyebrow {
+    font-family: var(--mono);
+    font-size: 11px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 1.25rem;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .eyebrow::before {
+    content: '';
+    display: inline-block;
+    width: 28px; height: 2px;
+    background: var(--accent);
+  }
+
+  .hero h1 {
+    font-family: var(--sans);
+    font-size: clamp(2.2rem, 6vw, 4rem);
+    font-weight: 800;
+    line-height: 1.0;
+    letter-spacing: -0.03em;
+    color: var(--ink);
+    margin-bottom: 1.25rem;
+  }
+
+  .hero h1 em {
+    font-family: var(--serif);
+    font-style: italic;
+    font-weight: 400;
+    color: var(--accent);
+  }
+
+  .hero-sub {
+    font-family: var(--serif);
+    font-size: 1.2rem;
+    line-height: 1.65;
+    color: #3a3530;
+    max-width: 600px;
+    margin-bottom: 2rem;
+  }
+
+  .hero-meta {
+    display: flex;
+    gap: 1rem;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .tag {
+    background: var(--ink);
+    color: var(--paper);
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 4px 10px;
+    letter-spacing: 0.1em;
+    text-transform: uppercase;
+  }
+
+  .hero-meta-text {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+  }
+
+  /* ── TICKER ── */
+  .ticker {
+    background: var(--ink);
+    padding: 10px 0;
+    overflow: hidden;
+    border-bottom: 2px solid var(--accent);
+  }
+
+  .ticker-track {
+    display: flex;
+    animation: ticker 26s linear infinite;
+    width: max-content;
+  }
+
+  .ticker-item {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 0 2rem;
+    font-family: var(--mono);
+    font-size: 12px;
+    color: rgba(255,255,255,0.7);
+    border-right: 1px solid rgba(255,255,255,0.08);
+    white-space: nowrap;
+  }
+
+  .ticker-up { color: #00e676; }
+  .ticker-dn { color: #ff5252; }
+
+  @keyframes ticker { 0%{transform:translateX(0)} 100%{transform:translateX(-50%)} }
+
+  /* ── LAYOUT ── */
+  .container {
+    max-width: 820px;
+    margin: 0 auto;
+    padding: 0 2rem;
+  }
+
+  /* ── ARTICLE SECTIONS ── */
+  .article-section {
+    padding: 3rem 0 2rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.22em;
+    text-transform: uppercase;
+    color: var(--accent);
+    margin-bottom: 0.75rem;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .section-label::before {
+    content: '';
+    width: 16px; height: 1px;
+    background: var(--accent);
+  }
+
+  /* ALL HEADINGS FORCED DARK */
+  h2 {
+    font-family: var(--sans);
+    font-size: clamp(1.4rem, 3vw, 1.9rem);
+    font-weight: 700;
+    letter-spacing: -0.025em;
+    color: var(--ink) !important;
+    margin-bottom: 1rem;
+    line-height: 1.15;
+  }
+
+  h3 {
+    font-family: var(--sans);
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: var(--ink) !important;
+    margin: 1.5rem 0 0.6rem;
+    letter-spacing: -0.01em;
+  }
+
+  /* ── PROSE ── */
+  .prose p {
+    font-size: 1rem;
+    line-height: 1.85;
+    color: #2c2826;
+    margin-bottom: 1.25rem;
+    font-family: var(--serif);
+    font-size: 1.05rem;
+  }
+
+  .prose p:last-child { margin-bottom: 0; }
+
+  .prose strong {
+    font-family: var(--sans);
+    font-weight: 700;
+    color: var(--ink);
+  }
+
+  .lead-para {
+    font-family: var(--serif);
+    font-size: 1.25rem;
+    line-height: 1.7;
+    color: #1a1714;
+    border-left: 3px solid var(--accent);
+    padding-left: 1.25rem;
+    margin-bottom: 2rem;
+  }
+
+  .pull-quote {
+    border-left: 3px solid var(--accent2);
+    padding: 1.1rem 1.4rem;
+    margin: 2rem 0;
+    background: rgba(0, 87, 255, 0.04);
+    border-radius: 0 6px 6px 0;
+  }
+
+  .pull-quote-label {
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: var(--accent2);
+    margin-bottom: 0.5rem;
+  }
+
+  .pull-quote p {
+    font-family: var(--serif);
+    font-size: 1.1rem;
+    font-style: italic;
+    line-height: 1.65;
+    color: #1a1a2e;
+    margin: 0;
+  }
+
+  .callout {
+    border: 1px solid rgba(255,60,0,0.25);
+    border-left: 3px solid var(--accent);
+    padding: 1rem 1.25rem;
+    border-radius: 0 6px 6px 0;
+    margin: 1.5rem 0;
+    background: rgba(255,60,0,0.03);
+  }
+
+  .callout-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    margin-bottom: 0.5rem;
+  }
+
+  .callout p {
+    font-size: 0.9rem;
+    line-height: 1.7;
+    color: #333;
+    font-family: var(--sans);
+    margin: 0;
+  }
+
+  code {
+    font-family: var(--mono);
+    font-size: 0.88em;
+    background: rgba(0,0,0,0.07);
+    padding: 2px 6px;
+    border-radius: 3px;
+    color: var(--ink);
+  }
+
+  .code-block {
+    background: #0e1117;
+    color: #c9d1d9;
+    font-family: var(--mono);
+    font-size: 13px;
+    padding: 1.25rem 1.5rem;
+    border-radius: 6px;
+    overflow-x: auto;
+    margin: 1.5rem 0;
+    line-height: 1.7;
+  }
+
+  .code-block .comment { color: #6e7681; }
+  .code-block .keyword { color: #ff7b72; }
+  .code-block .string { color: #a5d6ff; }
+  .code-block .number { color: #f2cc60; }
+  .code-block .func { color: #d2a8ff; }
+
+  hr.divider {
+    border: none;
+    border-top: 1px solid var(--border);
+    margin: 2rem 0;
+  }
+
+  /* ── DASHBOARD MOCKUP ── */
+  .dashboard-mockup {
+    border: 1px solid rgba(0,0,0,0.15);
+    border-radius: 10px;
+    overflow: hidden;
+    margin: 2rem 0;
+    background: #0e1117;
+    font-family: var(--mono);
+    box-shadow: 0 20px 60px rgba(0,0,0,0.18);
+  }
+
+  .dash-bar {
+    background: #161b22;
+    padding: 10px 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    border-bottom: 1px solid rgba(255,255,255,0.06);
+  }
+
+  .dot { width: 10px; height: 10px; border-radius: 50%; }
+  .dot-r { background: #ff5f57; }
+  .dot-y { background: #febc2e; }
+  .dot-g { background: #28c840; }
+
+  .dash-title {
+    font-size: 11px;
+    color: rgba(255,255,255,0.35);
+    margin-left: 8px;
+    letter-spacing: 0.04em;
+  }
+
+  .dash-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 1px;
+    background: rgba(255,255,255,0.04);
+  }
+
+  .dash-stat {
+    background: #0e1117;
+    padding: 18px 16px;
+    text-align: center;
+  }
+
+  .dash-stat-val {
+    font-size: 1.8rem;
+    font-weight: 500;
+    color: #ffffff;
+    display: block;
+    letter-spacing: -0.03em;
+  }
+
+  .dash-stat-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.28);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-top: 4px;
+    display: block;
+  }
+
+  .dash-stat-trend { font-size: 11px; color: #00e676; margin-top: 3px; display: block; }
+
+  .dash-chart-area {
+    padding: 18px 16px;
+    background: #0e1117;
+    border-top: 1px solid rgba(255,255,255,0.04);
+  }
+
+  .chart-label {
+    font-size: 10px;
+    color: rgba(255,255,255,0.25);
+    text-transform: uppercase;
+    letter-spacing: 0.1em;
+    margin-bottom: 14px;
+  }
+
+  .chart-bars {
+    display: flex;
+    align-items: flex-end;
+    gap: 3px;
+    height: 90px;
+  }
+
+  .bar {
+    flex: 1;
+    border-radius: 2px 2px 0 0;
+    animation: barGrow 1.2s ease-out forwards;
+    transform-origin: bottom;
+    transform: scaleY(0);
+  }
+
+  @keyframes barGrow { to { transform: scaleY(1); } }
+
+  .dash-feed {
+    padding: 14px 16px;
+    background: #0e1117;
+    border-top: 1px solid rgba(255,255,255,0.04);
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .feed-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 9px 12px;
+    border-radius: 5px;
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    animation: fadeSlide 0.5s ease-out forwards;
+    opacity: 0;
+    transform: translateX(-8px);
+  }
+
+  .feed-item:nth-child(1) { animation-delay: 0.3s; }
+  .feed-item:nth-child(2) { animation-delay: 0.6s; }
+  .feed-item:nth-child(3) { animation-delay: 0.9s; }
+  .feed-item:nth-child(4) { animation-delay: 1.2s; }
+
+  @keyframes fadeSlide { to { opacity: 1; transform: translateX(0); } }
+
+  .feed-source {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 2px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+
+  .src-arxiv { background: #1a2744; color: #5b8dee; }
+  .src-github { background: #1a2a1a; color: #56d364; }
+  .src-hf     { background: #2a1a10; color: #f59e0b; }
+  .src-pwc    { background: #1e1a2a; color: #c084fc; }
+
+  .feed-text { font-size: 11px; color: rgba(255,255,255,0.5); line-height: 1.4; flex: 1; }
+  .feed-score { font-size: 12px; color: #00e676; flex-shrink: 0; }
+
+  /* ── ALGO CARD ── */
+  .algo-card {
+    background: var(--ink);
+    color: var(--paper);
+    padding: 1.75rem;
+    border-radius: 8px;
+    margin: 1.75rem 0;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .algo-card::after {
+    content: 'RANKING FORMULA v2';
+    position: absolute;
+    top: 14px; right: 18px;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 0.2em;
+    color: rgba(255,255,255,0.1);
+    text-transform: uppercase;
+  }
+
+  .algo-formula {
+    font-family: var(--mono);
+    font-size: 13.5px;
+    line-height: 2.4;
+    color: rgba(255,255,255,0.88);
+  }
+
+  .algo-formula .hl   { color: #ff3c00; }
+  .algo-formula .wt   { color: #f59e0b; }
+  .algo-formula .dim  { color: rgba(255,255,255,0.35); font-size: 11px; }
+
+  .weights-grid { display: flex; flex-direction: column; gap: 7px; margin-top: 1.25rem; border-top: 1px solid rgba(255,255,255,0.06); padding-top: 1.25rem; }
+
+  .weight-row { display: flex; align-items: center; gap: 10px; }
+
+  .weight-label {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: rgba(255,255,255,0.45);
+    width: 180px;
+    flex-shrink: 0;
+  }
+
+  .weight-bar-bg {
+    flex: 1; height: 4px;
+    background: rgba(255,255,255,0.07);
+    border-radius: 2px;
+    overflow: hidden;
+  }
+
+  .weight-bar-fill {
+    height: 100%;
+    border-radius: 2px;
+    animation: fillBar 1.2s ease-out forwards;
+    transform-origin: left;
+    transform: scaleX(0);
+  }
+
+  @keyframes fillBar { to { transform: scaleX(1); } }
+
+  .weight-pct {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: rgba(255,255,255,0.55);
+    width: 34px;
+    text-align: right;
+    flex-shrink: 0;
+  }
+
+  /* ── PIPELINE ── */
+  .pipeline {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1.75rem 0;
+  }
+
+  .pipe-step {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 13px 18px;
+    border-bottom: 1px solid var(--border);
+    animation: stepIn 0.45s ease-out forwards;
+    opacity: 0;
+    transform: translateX(-10px);
+    background: white;
+    transition: background 0.15s;
+  }
+
+  .pipe-step:hover { background: #faf8f4; }
+  .pipe-step:last-child { border-bottom: none; }
+
+  .pipe-step:nth-child(1) { animation-delay: 0.05s; }
+  .pipe-step:nth-child(2) { animation-delay: 0.13s; }
+  .pipe-step:nth-child(3) { animation-delay: 0.21s; }
+  .pipe-step:nth-child(4) { animation-delay: 0.29s; }
+  .pipe-step:nth-child(5) { animation-delay: 0.37s; }
+  .pipe-step:nth-child(6) { animation-delay: 0.45s; }
+  .pipe-step:nth-child(7) { animation-delay: 0.53s; }
+  .pipe-step:nth-child(8) { animation-delay: 0.61s; }
+
+  @keyframes stepIn { to { opacity: 1; transform: translateX(0); } }
+
+  .pipe-num {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: var(--muted);
+    width: 22px;
+    flex-shrink: 0;
+  }
+
+  .pipe-name {
+    font-family: var(--mono);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    flex: 1;
+  }
+
+  .pipe-detail {
+    font-size: 11px;
+    color: var(--muted);
+    font-family: var(--mono);
+  }
+
+  .pipe-badge {
+    font-family: var(--mono);
+    font-size: 9px;
+    padding: 3px 8px;
+    border-radius: 3px;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    flex-shrink: 0;
+  }
+
+  .badge-ml   { background: #ede9fe; color: #5b21b6; }
+  .badge-api  { background: #dcfce7; color: #166534; }
+  .badge-db   { background: #fef3c7; color: #92400e; }
+
+  /* ── SOURCES ── */
+  .sources-grid {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 10px;
+    margin: 1.5rem 0;
+  }
+
+  .source-card {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 14px 10px;
+    text-align: center;
+    background: white;
+    transition: transform 0.2s, box-shadow 0.2s;
+  }
+
+  .source-card:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 8px 24px rgba(0,0,0,0.09);
+  }
+
+  .source-icon { font-size: 1.5rem; margin-bottom: 7px; display: block; }
+
+  .source-name {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.05em;
+    text-transform: uppercase;
+    color: var(--ink);
+    display: block;
+    margin-bottom: 4px;
+  }
+
+  .source-desc {
+    font-size: 9px;
+    color: var(--muted);
+    font-family: var(--mono);
+    line-height: 1.4;
+    display: block;
+  }
+
+  /* ── TECH CHIPS ── */
+  .chip-section-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.15em;
+    margin: 1.25rem 0 0.5rem;
+  }
+
+  .tech-chips {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 0.75rem;
+  }
+
+  .chip {
+    font-family: var(--mono);
+    font-size: 11px;
+    padding: 4px 11px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    color: var(--ink);
+    background: white;
+  }
+
+  .chip-ml   { background: #ede9fe; border-color: #c4b5fd; color: #5b21b6; }
+  .chip-infra{ background: #dcfce7; border-color: #86efac; color: #166534; }
+  .chip-fe   { background: #dbeafe; border-color: #93c5fd; color: #1d4ed8; }
+  .chip-data { background: #fef3c7; border-color: #fcd34d; color: #92400e; }
+
+  /* ── ARCH DIAGRAM ── */
+  .arch-block {
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1.75rem 0;
+    font-family: var(--mono);
+    font-size: 12px;
+  }
+
+  .arch-row {
+    display: flex;
+    align-items: stretch;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .arch-row:last-child { border-bottom: none; }
+
+  .arch-layer-label {
+    writing-mode: vertical-lr;
+    transform: rotate(180deg);
+    font-size: 9px;
+    letter-spacing: 0.15em;
+    text-transform: uppercase;
+    color: var(--muted);
+    padding: 12px 10px;
+    background: rgba(0,0,0,0.03);
+    border-right: 1px solid var(--border);
+    flex-shrink: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+  }
+
+  .arch-boxes {
+    display: flex;
+    flex: 1;
+    gap: 8px;
+    padding: 12px 14px;
+    flex-wrap: wrap;
+  }
+
+  .arch-box {
+    background: white;
+    border: 1px solid var(--border);
+    border-radius: 5px;
+    padding: 8px 12px;
+    font-size: 11px;
+    color: var(--ink);
+    white-space: nowrap;
+  }
+
+  .arch-box-accent { border-left: 2px solid var(--accent); }
+  .arch-box-blue   { border-left: 2px solid var(--accent2); }
+  .arch-box-green  { border-left: 2px solid #00b96b; }
+  .arch-box-amber  { border-left: 2px solid #f59e0b; }
+
+  /* ── STATS INLINE ── */
+  .stat-row {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 1px;
+    background: var(--border);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 2rem 0;
+  }
+
+  .stat-cell {
+    background: white;
+    padding: 1.25rem;
+    text-align: center;
+  }
+
+  .stat-cell-num {
+    font-family: var(--sans);
+    font-size: 2rem;
+    font-weight: 800;
+    color: var(--ink);
+    letter-spacing: -0.03em;
+    display: block;
+  }
+
+  .stat-cell-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--muted);
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    display: block;
+    margin-top: 4px;
+  }
+
+  .stat-cell-sub {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: #00b96b;
+    display: block;
+    margin-top: 2px;
+  }
+
+  /* ── ENDPOINT LIST ── */
+  .endpoint-list {
+    display: flex;
+    flex-direction: column;
+    gap: 0;
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    overflow: hidden;
+    margin: 1.5rem 0;
+  }
+
+  .endpoint {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    padding: 11px 16px;
+    border-bottom: 1px solid var(--border);
+    background: white;
+    font-family: var(--mono);
+    font-size: 12px;
+    transition: background 0.15s;
+  }
+
+  .endpoint:last-child { border-bottom: none; }
+  .endpoint:hover { background: #faf8f4; }
+
+  .method {
+    font-size: 10px;
+    padding: 2px 7px;
+    border-radius: 3px;
+    font-weight: 500;
+    flex-shrink: 0;
+    letter-spacing: 0.05em;
+  }
+
+  .method-get  { background: #dcfce7; color: #166534; }
+  .method-post { background: #dbeafe; color: #1d4ed8; }
+  .method-ws   { background: #fef3c7; color: #92400e; }
+
+  .endpoint-path { color: var(--ink); flex: 1; }
+  .endpoint-desc { font-size: 11px; color: var(--muted); }
+
+  /* ── FOOTER ── */
+  .footer {
+    background: var(--ink);
+    color: rgba(255,255,255,0.6);
+    padding: 3rem 2rem;
+    margin-top: 0;
+  }
+
+  .footer-inner {
+    max-width: 820px;
+    margin: 0 auto;
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 2rem;
+  }
+
+  .footer-brand-name {
+    font-family: var(--sans);
+    font-weight: 800;
+    font-size: 1.2rem;
+    color: white;
+    letter-spacing: -0.03em;
+    margin-bottom: 0.5rem;
+  }
+
+  .footer-brand-name span { color: var(--accent); }
+
+  .footer-tagline {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: rgba(255,255,255,0.3);
+    line-height: 1.6;
+  }
+
+  .footer-col-title {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: rgba(255,255,255,0.3);
+    margin-bottom: 1rem;
+  }
+
+  .footer-links-list {
+    list-style: none;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  .footer-links-list a {
+    font-family: var(--mono);
+    font-size: 12px;
+    color: rgba(255,255,255,0.5);
+    text-decoration: none;
+    transition: color 0.2s;
+  }
+
+  .footer-links-list a:hover { color: var(--accent); }
+
+  .footer-bottom {
+    max-width: 820px;
+    margin: 2rem auto 0;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255,255,255,0.06);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .footer-bottom span {
+    font-family: var(--mono);
+    font-size: 11px;
+    color: rgba(255,255,255,0.2);
+  }
+
+  .footer-stack {
+    display: flex;
+    gap: 10px;
+    flex-wrap: wrap;
+  }
+
+  .footer-stack span {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: rgba(255,255,255,0.2);
+    padding: 2px 8px;
+    border: 1px solid rgba(255,255,255,0.08);
+    border-radius: 3px;
+  }
+
+  @media (max-width: 640px) {
+    .sources-grid { grid-template-columns: repeat(3,1fr); }
+    .dash-grid { grid-template-columns: 1fr 1fr; }
+    .stat-row { grid-template-columns: 1fr 1fr; }
+    .footer-inner { grid-template-columns: 1fr; }
+    .nav-links { display: none; }
+    .arch-boxes { flex-wrap: wrap; }
+  }
+</style>
+</head>
+<body>
+
+<!-- NAV -->
+<nav>
+  <a class="nav-brand" href="#"><span>AI</span>Research.io</a>
+  <ul class="nav-links">
+    <li><a href="#why">Why</a></li>
+    <li><a href="#dashboard">Dashboard</a></li>
+    <li><a href="#algorithm">Algorithm</a></li>
+    <li><a href="#stack">Stack</a></li>
+    <li><a href="#api">API</a></li>
+  </ul>
+  <div class="live-badge"><div class="live-dot"></div>Live ingestion</div>
+</nav>
+
+<!-- HERO -->
+<div class="hero">
+  <div class="hero-grid-bg"></div>
+  <div class="hero-content">
+    <div class="eyebrow">Deep Dive · AI Infrastructure · May 2025</div>
+    <h1>The <em>Bloomberg Terminal</em><br>for AI Research Trends</h1>
+    <p class="hero-sub">We built a production-grade intelligence platform that ingests the entire AI ecosystem — arXiv, GitHub, HuggingFace, PapersWithCode, Reddit — ranks everything with an X-style algorithm, and forecasts what's going to be hot before anyone else notices.</p>
+    <div class="hero-meta">
+      <span class="tag">Open Source</span>
+      <span class="tag">FastAPI</span>
+      <span class="tag">Next.js 15</span>
+      <span class="tag">BERTopic</span>
+      <span class="hero-meta-text">12 min read</span>
+    </div>
+  </div>
+</div>
+
+<!-- TICKER -->
+<div class="ticker">
+  <div class="ticker-track">
+    <span class="ticker-item">GRAPH-RAG <span class="ticker-up">↑ 340%</span></span>
+    <span class="ticker-item">MULTIMODAL-LLM <span class="ticker-up">↑ 218%</span></span>
+    <span class="ticker-item">SPECULATIVE-DECODE <span class="ticker-up">↑ 91%</span></span>
+    <span class="ticker-item">MAMBA-SSM <span class="ticker-dn">↓ 12%</span></span>
+    <span class="ticker-item">VISION-TRANSFORMER <span class="ticker-up">↑ 67%</span></span>
+    <span class="ticker-item">RLHF-PPO <span class="ticker-dn">↓ 5%</span></span>
+    <span class="ticker-item">MCP-PROTOCOL <span class="ticker-up">↑ 520%</span></span>
+    <span class="ticker-item">FLASH-ATTENTION-3 <span class="ticker-up">↑ 144%</span></span>
+    <span class="ticker-item">DEEPSEEK-R2 <span class="ticker-up">↑ 880%</span></span>
+    <span class="ticker-item">DIFFUSION-LM <span class="ticker-up">↑ 33%</span></span>
+    <span class="ticker-item">REASONING-LLM <span class="ticker-up">↑ 412%</span></span>
+    <span class="ticker-item">AGENT-FRAMEWORK <span class="ticker-up">↑ 290%</span></span>
+    <!-- duplicate for seamless loop -->
+    <span class="ticker-item">GRAPH-RAG <span class="ticker-up">↑ 340%</span></span>
+    <span class="ticker-item">MULTIMODAL-LLM <span class="ticker-up">↑ 218%</span></span>
+    <span class="ticker-item">SPECULATIVE-DECODE <span class="ticker-up">↑ 91%</span></span>
+    <span class="ticker-item">MAMBA-SSM <span class="ticker-dn">↓ 12%</span></span>
+    <span class="ticker-item">VISION-TRANSFORMER <span class="ticker-up">↑ 67%</span></span>
+    <span class="ticker-item">RLHF-PPO <span class="ticker-dn">↓ 5%</span></span>
+    <span class="ticker-item">MCP-PROTOCOL <span class="ticker-up">↑ 520%</span></span>
+    <span class="ticker-item">FLASH-ATTENTION-3 <span class="ticker-up">↑ 144%</span></span>
+    <span class="ticker-item">DEEPSEEK-R2 <span class="ticker-up">↑ 880%</span></span>
+    <span class="ticker-item">DIFFUSION-LM <span class="ticker-up">↑ 33%</span></span>
+    <span class="ticker-item">REASONING-LLM <span class="ticker-up">↑ 412%</span></span>
+    <span class="ticker-item">AGENT-FRAMEWORK <span class="ticker-up">↑ 290%</span></span>
+  </div>
+</div>
+
+<!-- BODY -->
+<div class="container">
+
+  <!-- SECTION: WHY -->
+  <div class="article-section" id="why">
+    <div class="section-label">The problem</div>
+    <h2>AI research moves faster than any human can track</h2>
+
+    <p class="lead-para">We spent three months manually scanning arXiv every morning, watching GitHub trending, skimming HuggingFace releases — and still felt like we were always a week behind the curve. So we automated everything.</p>
+
+    <div class="prose">
+      <p>It started as a personal frustration. The AI ecosystem publishes roughly 200 new papers per day on arXiv alone. Add GitHub repositories, HuggingFace model releases, PapersWithCode implementations, and Reddit community discussions — and you're looking at a signal volume that's genuinely impossible to process manually.</p>
+
+      <p>The existing solutions weren't cutting it. RSS feeds give you chronological dumps with no quality signal. Newsletters curate last week's news. Twitter/X is excellent for virality but terrible for discovering slow-burn research that compounds into something important. What we wanted was something closer to how a quantitative trader thinks about markets: <strong>continuous ingestion, algorithmic scoring, and momentum forecasting.</strong></p>
+
+      <p>We wanted to know not just what was trending <em>right now</em> — but what was going to be trending in seven days. That predictive layer is what separates intelligence from aggregation.</p>
+    </div>
+
+    <div class="stat-row">
+      <div class="stat-cell">
+        <span class="stat-cell-num">200+</span>
+        <span class="stat-cell-label">arXiv papers/day</span>
+        <span class="stat-cell-sub">↑ growing 18% YoY</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-cell-num">5</span>
+        <span class="stat-cell-label">data pipelines</span>
+        <span class="stat-cell-sub">running 24/7</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-cell-num">84k</span>
+        <span class="stat-cell-label">papers indexed</span>
+        <span class="stat-cell-sub">↑ +1,204 today</span>
+      </div>
+      <div class="stat-cell">
+        <span class="stat-cell-num">7d</span>
+        <span class="stat-cell-label">forecast horizon</span>
+        <span class="stat-cell-sub">via Prophet models</span>
+      </div>
+    </div>
+
+    <div class="prose">
+      <h3>Why not just use an LLM to summarise everything?</h3>
+      <p>We tried that first. The problem is that a language model gives you a snapshot — it can synthesise what's in its context window beautifully, but it has no concept of <em>velocity</em>. It can't tell you that GraphRAG was getting 50 GitHub stars per day last month and is now getting 2,000. That momentum signal is what matters most for early trend detection, and it requires a real time-series pipeline, not a language model.</p>
+
+      <p>LLMs play a supporting role in this system — generating natural-language insight summaries once the ML pipeline has already done the heavy lifting of scoring and ranking. The intelligence is in the infrastructure, not the chatbot.</p>
+    </div>
+  </div>
+
+  <!-- SECTION: DASHBOARD -->
+  <div class="article-section" id="dashboard">
+    <div class="section-label">What we built</div>
+    <h2>A live intelligence dashboard, not a glorified RSS reader</h2>
+
+    <div class="prose">
+      <p>The frontend is a Next.js 15 dashboard with six views: a main trend feed, a papers explorer, a GitHub repos tracker, a forecasts page, a topic graph, and a live WebSocket feed that streams new ingestion events in real time. Think Bloomberg Terminal aesthetics meets research tooling.</p>
+    </div>
+
+    <!-- DASHBOARD MOCKUP -->
+    <div class="dashboard-mockup">
+      <div class="dash-bar">
+        <div class="dot dot-r"></div>
+        <div class="dot dot-y"></div>
+        <div class="dot dot-g"></div>
+        <span class="dash-title">AI Research Intelligence Platform — localhost:3000 — dashboard</span>
+      </div>
+      <div class="dash-grid">
+        <div class="dash-stat">
+          <span class="dash-stat-val" id="c1">0</span>
+          <span class="dash-stat-label">Papers ingested</span>
+          <span class="dash-stat-trend">↑ +1,204 today</span>
+        </div>
+        <div class="dash-stat">
+          <span class="dash-stat-val" id="c2">0</span>
+          <span class="dash-stat-label">Repos tracked</span>
+          <span class="dash-stat-trend">↑ +89 new</span>
+        </div>
+        <div class="dash-stat">
+          <span class="dash-stat-val" id="c3">0</span>
+          <span class="dash-stat-label">Topics active</span>
+          <span class="dash-stat-trend">↑ +7 emerging</span>
+        </div>
+      </div>
+      <div class="dash-chart-area">
+        <div class="chart-label">30-day ingestion volume — all sources combined</div>
+        <div class="chart-bars" id="bars"></div>
+      </div>
+      <div class="dash-feed">
+        <div class="feed-item">
+          <span class="feed-source src-arxiv">arXiv</span>
+          <span class="feed-text">GraphRAG: Unified Retrieval-Augmented Generation with Graph-Structured Knowledge — 94pp · Stanford + MSR</span>
+          <span class="feed-score">9.8</span>
+        </div>
+        <div class="feed-item">
+          <span class="feed-source src-github">GitHub</span>
+          <span class="feed-text">microsoft/phi-3-mini — ★ 28.4k — lightweight SLM, beats GPT-3.5 on MMLU, MIT license</span>
+          <span class="feed-score">9.3</span>
+        </div>
+        <div class="feed-item">
+          <span class="feed-source src-hf">HuggingFace</span>
+          <span class="feed-text">Qwen2.5-VL-72B-Instruct trending #1 — vision-language, 14k downloads today, Apache 2.0</span>
+          <span class="feed-score">8.7</span>
+        </div>
+        <div class="feed-item">
+          <span class="feed-source src-pwc">PapersWCode</span>
+          <span class="feed-text">Flash-Attention-3 new SOTA on MLPerf inference — 2.4× throughput gain vs FA2 on H100</span>
+          <span class="feed-score">8.2</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose">
+      <p>The live feed is powered by WebSocket subscriptions to a Redis Streams backend. Every time the ingestion orchestrator processes a new item and it scores above a quality threshold, it publishes to the stream. The frontend subscribes and appends items in real time — no polling, no page refreshes.</p>
+
+      <p>We deliberately kept the UI dense. AI practitioners are comfortable with information density — this isn't a consumer app, it's a professional tool. The aesthetic is intentionally terminal-like in the dark panels and data-forward in the light sections.</p>
+    </div>
+
+    <div class="callout">
+      <div class="callout-title">Quick start — get the dashboard running in 3 commands</div>
+      <p><code>git clone &lt;repo&gt; &amp;&amp; cd ai-research-platform</code><br>
+      <code>docker-compose up -d &amp;&amp; make init-db &amp;&amp; make ingest</code><br>
+      Dashboard at <code>localhost:3000</code> · API docs at <code>localhost:8000/docs</code></p>
+    </div>
+  </div>
+
+  <!-- SECTION: DATA SOURCES -->
+  <div class="article-section">
+    <div class="section-label">Data pipeline</div>
+    <h2>Five MCP servers, one ingestion orchestrator</h2>
+
+    <div class="prose">
+      <p>The data layer is built around Anthropic's <strong>Model Context Protocol (MCP)</strong> — each data source gets its own MCP server that handles auth, rate-limiting, pagination, and schema normalisation. The ingestion orchestrator treats them all identically at the transport layer.</p>
+    </div>
+
+    <div class="sources-grid">
+      <div class="source-card">
+        <span class="source-icon">📄</span>
+        <span class="source-name">arXiv</span>
+        <span class="source-desc">Latest preprints, abstracts, author graphs</span>
+      </div>
+      <div class="source-card">
+        <span class="source-icon">⬡</span>
+        <span class="source-name">GitHub</span>
+        <span class="source-desc">Star velocity, forks, commit cadence</span>
+      </div>
+      <div class="source-card">
+        <span class="source-icon">🤗</span>
+        <span class="source-name">HuggingFace</span>
+        <span class="source-desc">Model releases, dataset cards, downloads</span>
+      </div>
+      <div class="source-card">
+        <span class="source-icon">💡</span>
+        <span class="source-name">PapersWCode</span>
+        <span class="source-desc">SOTA benchmarks, code implementations</span>
+      </div>
+      <div class="source-card">
+        <span class="source-icon">💬</span>
+        <span class="source-name">Reddit</span>
+        <span class="source-desc">r/MachineLearning community sentiment</span>
+      </div>
+    </div>
+
+    <div class="prose">
+      <p>The choice of MCP wasn't incidental. We evaluated plain REST adapters and a few message-queue patterns before landing on MCP. The key advantage is that each server declares its capabilities, data schema, and rate-limit budget in a standard way — the orchestrator doesn't need to know anything source-specific. Adding a new source (Semantic Scholar, ACL Anthology, Elsevier) means writing one new MCP server and plugging it in. No changes to the ranking engine or frontend.</p>
+
+      <h3>What happens when a source goes down?</h3>
+      <p>Each MCP server has an exponential backoff retry policy and writes to a dead-letter queue in Redis if it fails after three attempts. The orchestrator tracks source health independently, so a Reddit API outage doesn't stall arXiv ingestion. Kafka handles the event streaming between the MCP layer and the backend — we chose Kafka over RabbitMQ for its durability guarantees and the ability to replay ingestion events for backfill.</p>
+    </div>
+
+    <div class="code-block">
+<span class="comment"># Run ingestion manually — useful for backfill or testing</span>
+<span class="keyword">python</span> scripts/run_ingestion.py --sources all
+
+<span class="comment"># Ingest only specific sources</span>
+<span class="keyword">python</span> scripts/run_ingestion.py --sources arxiv github
+
+<span class="comment"># Available sources: arxiv, github, huggingface, paperswithcode, reddit</span>
+    </div>
+  </div>
+
+  <!-- SECTION: ALGORITHM -->
+  <div class="article-section" id="algorithm">
+    <div class="section-label">Ranking engine</div>
+    <h2>The X-style ranking formula — and why we built it this way</h2>
+
+    <div class="prose">
+      <p>When X (formerly Twitter) surfaced its ranking algorithm, a few things became clear: the best feed algorithms are composites of independent signals, each measuring something meaningfully different. Citation count alone doesn't tell you momentum. GitHub stars alone doesn't tell you research quality. You need both — weighted by what matters for the use case.</p>
+
+      <p>Our ranking formula uses five signals. The weights were tuned empirically by running the algorithm on six months of historical data and comparing its top-10 outputs against what the community retrospectively agreed were the most important papers and repos of each week.</p>
+    </div>
+
+    <div class="algo-card">
+      <div class="algo-formula">
+        <span class="dim">trend_score =</span><br>
+        &nbsp;&nbsp;<span class="wt">0.35</span> × <span class="hl">growth_velocity</span>&nbsp;&nbsp;<span class="dim">// how fast is attention accelerating?</span><br>
+        &nbsp;&nbsp;+ <span class="wt">0.25</span> × <span class="hl">github_activity</span>&nbsp;&nbsp;<span class="dim">// is anyone actually building with it?</span><br>
+        &nbsp;&nbsp;+ <span class="wt">0.20</span> × <span class="hl">citation_acceleration</span>&nbsp;&nbsp;<span class="dim">// are researchers citing it?</span><br>
+        &nbsp;&nbsp;+ <span class="wt">0.10</span> × <span class="hl">community_engagement</span>&nbsp;&nbsp;<span class="dim">// is the community talking?</span><br>
+        &nbsp;&nbsp;+ <span class="wt">0.10</span> × <span class="hl">novelty_score</span>&nbsp;&nbsp;<span class="dim">// is this genuinely new?</span>
+      </div>
+      <div class="weights-grid">
+        <div class="weight-row">
+          <span class="weight-label">Growth velocity</span>
+          <div class="weight-bar-bg"><div class="weight-bar-fill" style="width:35%;background:#ff3c00;animation-delay:0.1s"></div></div>
+          <span class="weight-pct">35%</span>
+        </div>
+        <div class="weight-row">
+          <span class="weight-label">GitHub activity</span>
+          <div class="weight-bar-bg"><div class="weight-bar-fill" style="width:25%;background:#f59e0b;animation-delay:0.25s"></div></div>
+          <span class="weight-pct">25%</span>
+        </div>
+        <div class="weight-row">
+          <span class="weight-label">Citation acceleration</span>
+          <div class="weight-bar-bg"><div class="weight-bar-fill" style="width:20%;background:#56d364;animation-delay:0.4s"></div></div>
+          <span class="weight-pct">20%</span>
+        </div>
+        <div class="weight-row">
+          <span class="weight-label">Community engagement</span>
+          <div class="weight-bar-bg"><div class="weight-bar-fill" style="width:10%;background:#5b8dee;animation-delay:0.55s"></div></div>
+          <span class="weight-pct">10%</span>
+        </div>
+        <div class="weight-row">
+          <span class="weight-label">Novelty score</span>
+          <div class="weight-bar-bg"><div class="weight-bar-fill" style="width:10%;background:#c084fc;animation-delay:0.7s"></div></div>
+          <span class="weight-pct">10%</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose">
+      <p>Growth velocity gets the highest weight because it's the best leading indicator we found. A paper that doubles its daily citation count over three consecutive days is almost always genuinely important — the field is noticing it. GitHub activity is a strong proxy for practical applicability: researchers star things they find interesting, but they fork and commit to things they're actually building with.</p>
+
+      <p>The novelty score deserves a special mention. It's computed by embedding each item with SentenceTransformers and checking its cosine distance from the existing top-50 items in Qdrant. If something is semantically very close to what's already ranked highly, it gets a novelty penalty. This prevents the feed from being dominated by five variations of the same paper — we call this diversity injection, and it significantly improved perceived feed quality in user testing.</p>
+
+      <h3>The multi-stage pipeline</h3>
+      <p>The ranking doesn't happen in a single pass. We start with 500 candidates and run them through a sequence of filters and boosters before landing on Top-K results.</p>
+    </div>
+
+    <div class="pipeline">
+      <div class="pipe-step">
+        <span class="pipe-num">01</span>
+        <span class="pipe-name">Candidate Retrieval</span>
+        <span class="pipe-detail">N = 500 items from all sources</span>
+        <span class="pipe-badge badge-db">PostgreSQL</span>
+      </div>
+      <div class="pipe-step">
+        <span class="pipe-num">02</span>
+        <span class="pipe-name">Signal Filtering</span>
+        <span class="pipe-detail">Quality threshold — remove spam &amp; duplicates</span>
+        <span class="pipe-badge badge-api">FastAPI</span>
+      </div>
+      <div class="pipe-step">
+        <span class="pipe-num">03</span>
+        <span class="pipe-name">Embedding Similarity</span>
+        <span class="pipe-detail">Semantic relevance via vector search</span>
+        <span class="pipe-badge badge-ml">Qdrant</span>
+      </div>
+      <div class="pipe-step">
+        <span class="pipe-num">04</span>
+        <span class="pipe-name">Momentum Scoring</span>
+        <span class="pipe-detail">Prophet time-series forecast integration</span>
+        <span class="pipe-badge badge-ml">Prophet</span>
+      </div>
+      <div class="pipe-step">
+        <span class="pipe-num">05</span>
+        <span class="pipe-name">Engagement Boosting</span>
+        <span class="pipe-detail">Recency decay + virality multiplier</span>
+        <span class="pipe-badge badge-api">Scorer</span>
+      </div>
+      <div class="pipe-step">
+        <span class="pipe-num">06</span>
+        <span class="pipe-name">Novelty Injection</span>
+        <span class="pipe-detail">Semantic diversity enforcement</span>
+        <span class="pipe-badge badge-ml">BERTopic</span>
+      </div>
+      <div class="pipe-step">
+        <span class="pipe-num">07</span>
+        <span class="pipe-name">Re-Ranking</span>
+        <span class="pipe-detail">Final pass with XGBoost learned ranker</span>
+        <span class="pipe-badge badge-ml">XGBoost</span>
+      </div>
+      <div class="pipe-step">
+        <span class="pipe-num">08</span>
+        <span class="pipe-name">Top-K Results</span>
+        <span class="pipe-detail">Served via REST API + WebSocket stream</span>
+        <span class="pipe-badge badge-api">API</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- SECTION: ML -->
+  <div class="article-section">
+    <div class="section-label">ML pipeline</div>
+    <h2>BERTopic, Prophet, and why we chose them over fancier alternatives</h2>
+
+    <div class="prose">
+      <p>When people hear "ML pipeline" they often expect something exotic. Ours is deliberately practical. BERTopic for topic modelling. Facebook Prophet for time-series forecasting. XGBoost for learning-to-rank. All of these are mature, well-understood tools with sensible defaults and excellent documentation.</p>
+
+      <p>We evaluated more complex options. We looked at fine-tuning a custom transformer for topic extraction, and we looked at temporal fusion transformers for forecasting. Both outperformed our choices in benchmark conditions and both were significantly harder to operate in production. BERTopic with a decent embedding model gets 90% of the quality at 20% of the infrastructure complexity.</p>
+
+      <h3>Topic extraction with BERTopic</h3>
+      <p>Every ingested item — paper abstract, repo description, Reddit post — gets embedded with <code>sentence-transformers/all-mpnet-base-v2</code> and passed through BERTopic. The model maintains a live topic graph that updates incrementally as new items arrive. Topics are labelled automatically using the top-n words per cluster, but we also run a quick Qwen 2.5 inference step to generate human-readable topic names like "Graph-based RAG for enterprise retrieval" rather than "graph retrieval augmented generation enterprise".</p>
+
+      <h3>Forecasting with Prophet</h3>
+      <p>Each tracked topic gets a Prophet model trained on its 90-day engagement history. We forecast 7 days ahead, updating models every 6 hours. Prophet handles the seasonality patterns well — AI Twitter tends to spike Monday–Wednesday, cool off Thursday–Friday, and go quiet on weekends. Accounting for that weekly seasonality significantly improved forecast accuracy.</p>
+    </div>
+
+    <div class="pull-quote">
+      <div class="pull-quote-label">AI-generated insight · Qwen 2.5 via Ollama · live output</div>
+      <p>"GraphRAG is rapidly gaining momentum due to enterprise retrieval applications and multi-agent workflows. Star growth has accelerated 340% in the past 30 days, with 12 new implementations released this week. Forecast: top-3 trending topic in 7 days with 87% confidence."</p>
+    </div>
+
+    <div class="prose">
+      <p>The LLM insight generation runs asynchronously — it doesn't block the ranking pipeline. Qwen 2.5 7B via Ollama gives us good enough quality for this task on a single GPU, and being open-source means we're not paying per-token for something that runs continuously. For teams without GPU access, any OpenAI-compatible endpoint (including the Anthropic API) can be substituted by changing one environment variable.</p>
+    </div>
+  </div>
+
+  <!-- SECTION: ARCHITECTURE -->
+  <div class="article-section">
+    <div class="section-label">System design</div>
+    <h2>Architecture overview — how the layers fit together</h2>
+
+    <div class="arch-block">
+      <div class="arch-row">
+        <div class="arch-layer-label">Frontend</div>
+        <div class="arch-boxes">
+          <div class="arch-box arch-box-fe">Next.js 15 dashboard</div>
+          <div class="arch-box arch-box-fe">Trends view</div>
+          <div class="arch-box arch-box-fe">Papers explorer</div>
+          <div class="arch-box arch-box-fe">Forecast charts</div>
+          <div class="arch-box arch-box-fe">Topic graph (D3)</div>
+          <div class="arch-box arch-box-fe">WebSocket live feed</div>
+        </div>
+      </div>
+      <div class="arch-row">
+        <div class="arch-layer-label">API</div>
+        <div class="arch-boxes">
+          <div class="arch-box arch-box-accent">FastAPI backend</div>
+          <div class="arch-box arch-box-accent">Ranking API</div>
+          <div class="arch-box arch-box-accent">Forecast API</div>
+          <div class="arch-box arch-box-accent">LLM insight API</div>
+          <div class="arch-box arch-box-accent">WebSocket /ws/live-feed</div>
+        </div>
+      </div>
+      <div class="arch-row">
+        <div class="arch-layer-label">ML</div>
+        <div class="arch-boxes">
+          <div class="arch-box arch-box-blue">SentenceTransformers</div>
+          <div class="arch-box arch-box-blue">BERTopic</div>
+          <div class="arch-box arch-box-blue">Prophet forecaster</div>
+          <div class="arch-box arch-box-blue">XGBoost ranker</div>
+          <div class="arch-box arch-box-blue">Qwen 2.5 (Ollama)</div>
+        </div>
+      </div>
+      <div class="arch-row">
+        <div class="arch-layer-label">MCP</div>
+        <div class="arch-boxes">
+          <div class="arch-box arch-box-green">arxiv_server.py</div>
+          <div class="arch-box arch-box-green">github_server.py</div>
+          <div class="arch-box arch-box-green">huggingface_server.py</div>
+          <div class="arch-box arch-box-green">paperswithcode_server.py</div>
+          <div class="arch-box arch-box-green">reddit_server.py</div>
+        </div>
+      </div>
+      <div class="arch-row">
+        <div class="arch-layer-label">Storage</div>
+        <div class="arch-boxes">
+          <div class="arch-box arch-box-amber">PostgreSQL</div>
+          <div class="arch-box arch-box-amber">Qdrant (vectors)</div>
+          <div class="arch-box arch-box-amber">Redis (cache + streams)</div>
+          <div class="arch-box arch-box-amber">Kafka (events)</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="prose">
+      <p>PostgreSQL stores the canonical records — papers, repos, models, their metadata and time-series signal history. Qdrant stores the vector embeddings and powers semantic search and similarity queries. Redis serves two purposes: caching expensive ranking computations (TTL: 5 minutes) and powering the Streams-based event bus between the ingestion layer and the API. Kafka handles higher-volume event streaming between MCP servers and the backend.</p>
+
+      <p>Nginx sits in front of everything as a reverse proxy, routing <code>/api/*</code> to FastAPI and everything else to Next.js. The WebSocket endpoint at <code>/ws/live-feed</code> is proxied with upgraded connections. All services run in Docker Compose — the entire stack starts with a single command.</p>
+    </div>
+  </div>
+
+  <!-- SECTION: STACK -->
+  <div class="article-section" id="stack">
+    <div class="section-label">Technology choices</div>
+    <h2>The full tech stack — and the reasoning behind each choice</h2>
+
+    <div class="prose">
+      <p>We're not neutral on these choices. Every technology here was picked after evaluating alternatives, and some of the tradeoffs are worth explaining.</p>
+    </div>
+
+    <div class="chip-section-label">ML / AI — the intelligence layer</div>
+    <div class="tech-chips">
+      <span class="chip chip-ml">BERTopic</span>
+      <span class="chip chip-ml">SentenceTransformers</span>
+      <span class="chip chip-ml">Facebook Prophet</span>
+      <span class="chip chip-ml">XGBoost</span>
+      <span class="chip chip-ml">Qwen 2.5 via Ollama</span>
+      <span class="chip chip-ml">Qdrant vector DB</span>
+    </div>
+
+    <div class="chip-section-label">Backend — the API and data layer</div>
+    <div class="tech-chips">
+      <span class="chip chip-infra">FastAPI</span>
+      <span class="chip chip-infra">SQLAlchemy ORM</span>
+      <span class="chip chip-infra">PostgreSQL 16</span>
+      <span class="chip chip-infra">Redis 7</span>
+      <span class="chip chip-infra">Apache Kafka</span>
+      <span class="chip chip-infra">Pydantic v2</span>
+      <span class="chip chip-infra">MCP Protocol</span>
+    </div>
+
+    <div class="chip-section-label">Frontend — the dashboard</div>
+    <div class="tech-chips">
+      <span class="chip chip-fe">Next.js 15</span>
+      <span class="chip chip-fe">TypeScript</span>
+      <span class="chip chip-fe">Apache ECharts</span>
+      <span class="chip chip-fe">D3 force-directed graph</span>
+      <span class="chip chip-fe">WebSocket (native)</span>
+      <span class="chip chip-fe">Tailwind CSS</span>
+    </div>
+
+    <div class="chip-section-label">Infrastructure — the deployment layer</div>
+    <div class="tech-chips">
+      <span class="chip chip-data">Docker Compose</span>
+      <span class="chip chip-data">Nginx</span>
+      <span class="chip chip-data">Prometheus metrics</span>
+      <span class="chip chip-data">structlog (JSON logs)</span>
+      <span class="chip chip-data">Python 3.11</span>
+      <span class="chip chip-data">Node.js 20</span>
+    </div>
+
+    <div class="prose">
+      <p>FastAPI over Django or Flask because we needed async I/O for the WebSocket layer and the ingestion pipeline runs a lot of concurrent network requests. Pydantic v2 is a significant performance improvement over v1 and the schema validation is critical when you're ingesting from five heterogeneous sources. ECharts over Recharts or Victory because it handles large time-series datasets significantly better out of the box.</p>
+    </div>
+
+    <div class="callout">
+      <div class="callout-title">No OpenAI dependency</div>
+      <p>The entire ML pipeline runs locally. BERTopic, SentenceTransformers, Prophet, XGBoost, and Qwen 2.5 via Ollama — all self-hosted. The only external APIs are the data sources themselves (arXiv is free, GitHub needs a PAT, Reddit needs an app key). Zero per-token costs at inference time.</p>
+    </div>
+  </div>
+
+  <!-- SECTION: API -->
+  <div class="article-section" id="api">
+    <div class="section-label">API reference</div>
+    <h2>The REST API — everything you can query</h2>
+
+    <div class="prose">
+      <p>The backend exposes a clean REST API documented automatically via FastAPI's OpenAPI integration. Everything available in the dashboard is available via API — useful for building integrations, alerting pipelines, or custom frontends on top of the ranking engine.</p>
+    </div>
+
+    <div class="endpoint-list">
+      <div class="endpoint">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/v1/trends/</span>
+        <span class="endpoint-desc">Ranked trending items, paginated</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/v1/trends/topics</span>
+        <span class="endpoint-desc">Trending topic clusters</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/v1/trends/dashboard</span>
+        <span class="endpoint-desc">Dashboard aggregate stats</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/v1/papers/search?q=...</span>
+        <span class="endpoint-desc">Semantic vector search over papers</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/v1/papers/{id}/similar</span>
+        <span class="endpoint-desc">Similar papers via Qdrant ANN</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/v1/papers/{id}/insight</span>
+        <span class="endpoint-desc">LLM-generated insight for a paper</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-get">GET</span>
+        <span class="endpoint-path">/api/v1/forecasts/{entity_id}</span>
+        <span class="endpoint-desc">Prophet forecast for topic or repo</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-post">POST</span>
+        <span class="endpoint-path">/api/v1/forecasts/compute</span>
+        <span class="endpoint-desc">Trigger forecast recomputation</span>
+      </div>
+      <div class="endpoint">
+        <span class="method method-ws">WS</span>
+        <span class="endpoint-path">/ws/live-feed</span>
+        <span class="endpoint-desc">Real-time ingestion event stream</span>
+      </div>
+    </div>
+
+    <div class="prose">
+      <p>Full interactive documentation is available at <code>localhost:8000/docs</code> when running locally. Every endpoint is typed with Pydantic schemas and the OpenAPI spec is also exported as a static JSON file for downstream tooling.</p>
+    </div>
+  </div>
+
+  <!-- SECTION: WHAT'S NEXT -->
+  <div class="article-section">
+    <div class="section-label">What's next</div>
+    <h2>Where we're taking this</h2>
+
+    <div class="prose">
+      <p>The core platform is stable and running in production for our internal team. The next major piece is <strong>personalised trend feeds</strong> — learning individual reading patterns and adjusting the novelty_score and community_engagement weights per user. Someone who focuses on computer vision has different signal priorities than someone who cares primarily about reasoning systems.</p>
+
+      <p>We're also working on <strong>citation graph integration</strong> with Semantic Scholar's API. Right now citation_acceleration is computed from PapersWithCode and arXiv metadata — adding the full Semantic Scholar citation graph would make this signal significantly richer, especially for papers in the first 1–2 weeks after publication.</p>
+
+      <p>Finally, <strong>email digests and Slack alerts</strong> are the most-requested feature. The ranking engine already runs continuously — it's just a matter of building the notification layer on top. Subscribe to a topic cluster, set a score threshold, and get a Slack message when something spikes.</p>
+
+      <p>If you're interested in contributing, the repo is MIT-licensed and the architecture is deliberately modular. Adding a new MCP server for a new data source is the easiest starting point — you'll find the existing servers in <code>mcp_servers/</code> are each under 200 lines.</p>
+    </div>
+
+    <div class="pull-quote">
+      <div class="pull-quote-label">TL;DR</div>
+      <p>We built the intelligence layer that was missing between raw arXiv feeds and curated newsletters. The stack is production-grade, fully self-hostable, and open source. <code>docker-compose up -d</code> and you're running.</p>
+    </div>
+  </div>
+
+</div><!-- /container -->
+
+<!-- FOOTER -->
+<div class="footer">
+  <div class="footer-inner">
+    <div>
+      <div class="footer-brand-name"><span>AI</span>Research.io</div>
+      <div class="footer-tagline">A production-grade intelligence platform for AI ecosystem monitoring, ranking, and forecasting. Built in public, MIT licensed.</div>
+    </div>
+    <div>
+      <div class="footer-col-title">Platform</div>
+      <ul class="footer-links-list">
+        <li><a href="#">Dashboard</a></li>
+        <li><a href="#">Papers explorer</a></li>
+        <li><a href="#">Trend forecasts</a></li>
+        <li><a href="#">Topic graph</a></li>
+        <li><a href="#">API documentation</a></li>
+      </ul>
+    </div>
+    <div>
+      <div class="footer-col-title">Project</div>
+      <ul class="footer-links-list">
+        <li><a href="#">GitHub repository</a></li>
+        <li><a href="#">Architecture docs</a></li>
+        <li><a href="#">Contributing guide</a></li>
+        <li><a href="#">MIT License</a></li>
+        <li><a href="#">Changelog</a></li>
+      </ul>
+    </div>
+  </div>
+  <div class="footer-bottom">
+    <span>© 2025 AI Research Intelligence Platform · MIT License</span>
+    <div class="footer-stack">
+      <span>FastAPI</span>
+      <span>Next.js 15</span>
+      <span>BERTopic</span>
+      <span>Prophet</span>
+      <span>Qdrant</span>
+      <span>MCP</span>
+    </div>
+  </div>
+</div>
+
+<script>
+  // Animated counters
+  function animateCount(el, target, duration) {
+    const start = Date.now();
+    const step = () => {
+      const elapsed = Date.now() - start;
+      const p = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - p, 3);
+      el.textContent = Math.round(eased * target).toLocaleString();
+      if (p < 1) requestAnimationFrame(step);
+    };
+    requestAnimationFrame(step);
+  }
+
+  // Intersection observer to trigger counters when visible
+  const observer = new IntersectionObserver((entries) => {
+    entries.forEach(e => {
+      if (e.isIntersecting) {
+        animateCount(document.getElementById('c1'), 84219, 1800);
+        animateCount(document.getElementById('c2'), 12847, 1800);
+        animateCount(document.getElementById('c3'), 247, 1800);
+        observer.disconnect();
+      }
+    });
+  }, { threshold: 0.3 });
+
+  const dashEl = document.querySelector('.dashboard-mockup');
+  if (dashEl) observer.observe(dashEl);
+
+  // Build bar chart
+  const barsEl = document.getElementById('bars');
+  const vals = [42,58,61,55,70,88,95,79,82,91,103,97,110,124,118,130,141,129,155,148,162,170,158,175,182,190,178,201,195,210];
+  const maxV = Math.max(...vals);
+  const barColors = ['#ff3c00','#f59e0b','#56d364','#5b8dee','#c084fc'];
+  vals.forEach((v, i) => {
+    const bar = document.createElement('div');
+    bar.className = 'bar';
+    const h = Math.round((v / maxV) * 90);
+    bar.style.height = h + 'px';
+    bar.style.background = barColors[i % barColors.length];
+    bar.style.opacity = '0.65';
+    bar.style.animationDelay = (i * 0.035) + 's';
+    barsEl.appendChild(bar);
+  });
+</script>
+
+</body>
+</html>
