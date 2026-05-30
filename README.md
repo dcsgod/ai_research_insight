@@ -140,7 +140,7 @@ ai-research-platform/
 ### 1. Clone & Configure
 
 ```bash
-git clone <repo-url>
+git clone https://github.com/dcsgod/ai_research_insight.git
 cd ai-research-platform
 cp .env.example .env
 # Edit .env with your API keys
