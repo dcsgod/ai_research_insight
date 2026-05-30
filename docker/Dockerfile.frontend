@@ -1,0 +1,85 @@
+# ============================================================
+# AI Research Platform - Frontend Dockerfile
+# Multi-stage build for Next.js 14+ (standalone output)
+# ============================================================
+
+# ------------------------------------------------------------
+# Stage 1: deps — Install node_modules in isolation
+# ------------------------------------------------------------
+FROM node:20-alpine AS deps
+
+# Needed for native modules (e.g., sharp for image optimization)
+RUN apk add --no-cache libc6-compat python3 make g++
+
+WORKDIR /app
+
+# Copy package manifests and install dependencies
+# npm ci ensures a clean, reproducible install from package-lock.json
+COPY frontend/package.json frontend/package-lock.json* ./
+RUN npm ci --frozen-lockfile
+
+# ------------------------------------------------------------
+# Stage 2: builder — Build the Next.js application
+# ------------------------------------------------------------
+FROM node:20-alpine AS builder
+
+WORKDIR /app
+
+# Copy installed node_modules from deps stage
+COPY --from=deps /app/node_modules ./node_modules
+
+# Copy the entire frontend source
+COPY frontend/ ./
+
+# Build arguments for injecting public env vars at build time
+ARG NEXT_PUBLIC_API_URL=http://localhost:8000
+ARG NEXT_PUBLIC_WS_URL=ws://localhost:8000
+
+ENV NEXT_PUBLIC_API_URL=${NEXT_PUBLIC_API_URL}
+ENV NEXT_PUBLIC_WS_URL=${NEXT_PUBLIC_WS_URL}
+
+# Disable Next.js telemetry during build
+ENV NEXT_TELEMETRY_DISABLED=1
+
+# Build the Next.js application with standalone output
+# Requires `output: 'standalone'` in next.config.js
+RUN npm run build
+
+# ------------------------------------------------------------
+# Stage 3: runner — Minimal production runtime image
+# ------------------------------------------------------------
+FROM node:20-alpine AS runner
+
+WORKDIR /app
+
+# Set production environment
+ENV NODE_ENV=production
+ENV NEXT_TELEMETRY_DISABLED=1
+ENV PORT=3000
+ENV HOSTNAME=0.0.0.0
+
+# Install curl for healthcheck
+RUN apk add --no-cache curl
+
+# Create a non-root user for security
+RUN addgroup --system --gid 1001 nodejs && \
+    adduser --system --uid 1001 nextjs
+
+# Copy the standalone build output
+# The standalone folder contains only what's needed to run the app
+COPY --from=builder --chown=nextjs:nodejs /app/.next/standalone ./
+COPY --from=builder --chown=nextjs:nodejs /app/.next/static ./.next/static
+COPY --from=builder --chown=nextjs:nodejs /app/public ./public
+
+# Switch to non-root user
+USER nextjs
+
+# Expose the Next.js application port
+EXPOSE 3000
+
+# Health check for the frontend
+HEALTHCHECK --interval=30s --timeout=10s --start-period=30s --retries=3 \
+    CMD curl -f http://localhost:3000/ || exit 1
+
+# Launch the standalone server (produced by Next.js standalone output)
+CMD ["node", "server.js"]
