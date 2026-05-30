@@ -2,7 +2,7 @@
 
 > **Bloomberg Terminal for AI Research Trends** — A production-grade platform that ingests AI ecosystem signals, ranks trends using an X-style algorithm, forecasts momentum, and displays everything in a stunning modern dashboard.
 
-![Platform Preview](docs/preview.png)
+<img width="1913" height="948" alt="image" src="https://github.com/user-attachments/assets/1e3a3a1d-b16f-4fe7-8e3b-4a6cdb071715" />
 
 ---
 
